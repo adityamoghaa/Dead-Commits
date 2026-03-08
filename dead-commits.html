@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Dead Commits — Resurrect your GitHub contribution graph. A minimalist strategy game.">
+<title>Dead Commits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --white: #ffffff; --off-white: #f6f8fa;
+  --gray-50: #f0f2f4; --gray-100: #e6e9ed; --gray-200: #d1d5da; --gray-300: #b0b7c0;
+  --gray-400: #8a939e; --gray-500: #6a737d; --gray-600: #444c56; --gray-700: #2d333b;
+  --gray-800: #22272e; --gray-900: #161b22; --gray-950: #0d1117; --black: #010409;
+  --green-300: #3fb950; --green-400: #2ea043; --green-500: #238636;
+  --green-600: #196c2e; --green-700: #0f4c1f;
+  --red-300: #ff7b72; --red-400: #f85149; --red-500: #da3633;
+  --blue-300: #79c0ff;
+  --radius: 6px; --font-mono: 'DM Mono', monospace; --font-display: 'DM Serif Display', serif;
+}
+html { font-size: 16px; }
+body { background: var(--gray-950); color: var(--gray-300); font-family: var(--font-mono); min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+.topbar { width: 100%; border-bottom: 1px solid var(--gray-800); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 48px; background: var(--gray-950); position: sticky; top: 0; z-index: 20; }
+.topbar-brand { display: flex; align-items: center; gap: 10px; color: var(--gray-200); font-size: 0.8rem; letter-spacing: 0.04em; font-weight: 500; }
+.topbar-links { display: flex; align-items: center; gap: 20px; }
+.topbar-link { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-500); text-decoration: none; cursor: pointer; transition: color 0.2s; background: none; border: none; font-family: var(--font-mono); }
+.topbar-link:hover { color: var(--gray-200); }
+.main { width: 100%; max-width: 900px; padding: 48px 24px 64px; display: flex; flex-direction: column; gap: 40px; }
+.hero { display: flex; flex-direction: column; gap: 12px; animation: fadeUp 0.6s ease both; }
+.hero-eyebrow { font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green-300); }
+.hero-title { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.2rem); color: var(--white); line-height: 1.05; font-weight: 400; }
+.hero-title em { font-style: italic; color: var(--gray-400); }
+.hero-sub { font-size: 0.78rem; color: var(--gray-500); line-height: 1.7; max-width: 440px; font-weight: 300; }
+.stats-row { display: flex; gap: 0; border: 1px solid var(--gray-800); border-radius: var(--radius); overflow: hidden; animation: fadeUp 0.6s 0.1s ease both; }
+.stat-cell { flex: 1; padding: 14px 20px; border-right: 1px solid var(--gray-800); display: flex; flex-direction: column; gap: 4px; }
+.stat-cell:last-child { border-right: none; }
+.stat-cell-label { font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gray-600); }
+.stat-cell-value { font-size: 1.3rem; font-weight: 500; color: var(--gray-200); letter-spacing: -0.02em; transition: color 0.25s, text-shadow 0.25s; line-height: 1; }
+.stat-cell-value.green { color: var(--green-300); }
+.stat-cell-value.red { color: var(--red-400); }
+.stat-cell-value.flash { color: #7ee787; text-shadow: 0 0 16px rgba(63,185,80,0.5); }
+.energy-track { height: 2px; background: var(--gray-800); border-radius: 1px; overflow: hidden; margin-top: 6px; }
+.energy-fill { height: 100%; background: var(--blue-300); border-radius: 1px; transition: width 0.4s ease; box-shadow: 0 0 6px rgba(121,192,255,0.4); }
+.grid-section { display: flex; flex-direction: column; gap: 10px; animation: fadeUp 0.6s 0.2s ease both; }
+.grid-section-header { display: flex; align-items: center; justify-content: space-between; }
+.grid-section-title { font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gray-600); }
+.legend { display: flex; align-items: center; gap: 6px; }
+.legend-label { font-size: 0.58rem; color: var(--gray-700); }
+.legend-cell { width: 10px; height: 10px; border-radius: 2px; }
+.grid-wrap { background: var(--gray-950); border: 1px solid var(--gray-800); border-radius: var(--radius); padding: 20px 24px; overflow-x: auto; }
+.month-row { display: flex; gap: 3px; margin-bottom: 6px; padding-left: 26px; }
+.month-label { font-size: 0.5rem; color: var(--gray-700); flex: 1; min-width: 0; }
+.grid-body { display: flex; gap: 4px; align-items: flex-start; }
+.day-col { display: flex; flex-direction: column; gap: 3px; margin-right: 3px; }
+.day-lbl { font-size: 0.5rem; color: var(--gray-700); height: 12px; display: flex; align-items: center; width: 18px; }
+.commit-grid { display: flex; gap: 3px; }
+.g-col { display: flex; flex-direction: column; gap: 3px; }
+.cell { width: 12px; height: 12px; border-radius: 2px; cursor: pointer; transition: transform 0.12s ease; flex-shrink: 0; }
+.cell:hover { transform: scale(1.5); z-index: 5; position: relative; }
+.cell.lv0 { background: var(--gray-900); }
+.cell.lv1 { background: var(--green-700); }
+.cell.lv2 { background: var(--green-600); }
+.cell.lv3 { background: var(--green-400); }
+.cell.lv4 { background: var(--green-300); box-shadow: 0 0 6px rgba(63,185,80,0.5); }
+.cell.conflict { background: var(--red-500) !important; box-shadow: none !important; animation: cfPulse 1.4s ease infinite !important; }
+@keyframes cfPulse { 0%,100%{opacity:1}50%{opacity:0.55} }
+.cell.anim-plant { animation: aPlant 0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+.cell.anim-spread { animation: aSpread 0.45s ease both; }
+.cell.anim-resolve { animation: aResolve 0.5s ease both; }
+@keyframes aPlant { 0%{transform:scale(0);opacity:0} 100%{transform:scale(1);opacity:1} }
+@keyframes aSpread { 0%{transform:scale(0.2);opacity:0} 60%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
+@keyframes aResolve { 0%{transform:scale(1.5);filter:brightness(3)} 100%{transform:scale(1);filter:brightness(1)} }
+.particle { position: fixed; pointer-events: none; border-radius: 50%; animation: pFloat 1.4s ease forwards; }
+@keyframes pFloat { 0%{opacity:0.9;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)} }
+.log-row { height: 22px; display: flex; align-items: center; gap: 8px; animation: fadeUp 0.6s 0.3s ease both; }
+.log-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gray-700); transition: background 0.3s; flex-shrink: 0; }
+.log-dot.ok { background: var(--green-400); }
+.log-dot.bad { background: var(--red-400); }
+.log-text { font-size: 0.72rem; color: var(--gray-500); font-style: italic; font-weight: 300; transition: color 0.3s; }
+.log-text.ok { color: var(--green-300); }
+.log-text.bad { color: var(--red-300); }
+.controls-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; animation: fadeUp 0.6s 0.4s ease both; }
+.controls-left { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; border-radius: var(--radius); padding: 7px 16px; cursor: pointer; transition: all 0.18s; border: 1px solid var(--gray-700); background: transparent; color: var(--gray-400); }
+.btn:hover { border-color: var(--gray-500); color: var(--gray-200); background: var(--gray-900); }
+.btn-primary { border-color: var(--green-600); color: var(--green-300); }
+.btn-primary:hover { border-color: var(--green-400); color: #7ee787; background: rgba(63,185,80,0.06); }
+.btn-danger { border-color: transparent; color: var(--gray-600); font-size: 0.6rem; }
+.btn-danger:hover { border-color: var(--red-500); color: var(--red-300); background: rgba(218,54,51,0.05); }
+.kbd { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--gray-700); border-radius: 3px; padding: 0 5px; height: 16px; font-size: 0.5rem; color: var(--gray-600); margin-left: 4px; }
+.how-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; border: 1px solid var(--gray-800); border-radius: var(--radius); overflow: hidden; animation: fadeUp 0.6s 0.5s ease both; }
+.how-cell { padding: 16px 20px; background: var(--gray-950); display: flex; flex-direction: column; gap: 6px; }
+.how-cell-num { font-size: 0.6rem; color: var(--gray-700); letter-spacing: 0.12em; }
+.how-cell-title { font-size: 0.75rem; color: var(--gray-300); font-weight: 500; }
+.how-cell-desc { font-size: 0.65rem; color: var(--gray-600); line-height: 1.6; font-weight: 300; }
+.overlay { position: fixed; inset: 0; background: rgba(1,4,9,0.88); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 50; }
+.overlay.show { display: flex; animation: fadeUp 0.4s ease; }
+.overlay-panel { background: var(--gray-900); border: 1px solid var(--gray-800); border-radius: 8px; padding: 48px 44px; max-width: 380px; width: 100%; text-align: center; display: flex; flex-direction: column; gap: 16px; }
+.overlay-status { font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; }
+.overlay-status.won { color: var(--green-300); }
+.overlay-status.lost { color: var(--red-400); }
+.overlay-title { font-family: var(--font-display); font-size: 2rem; color: var(--white); font-weight: 400; line-height: 1.1; }
+.overlay-body { font-size: 0.7rem; color: var(--gray-500); line-height: 1.8; font-weight: 300; }
+.overlay-num { font-size: 3rem; font-weight: 500; letter-spacing: -0.04em; line-height: 1; }
+.overlay-num.won-n { color: var(--green-300); }
+.overlay-num.lost-n { color: var(--red-400); }
+.overlay-num-label { font-size: 0.62rem; color: var(--gray-600); letter-spacing: 0.1em; margin-top: -8px; }
+.overlay-divider { height: 1px; background: var(--gray-800); }
+.tooltip { position: fixed; pointer-events: none; z-index: 60; display: none; background: var(--gray-900); border: 1px solid var(--gray-700); border-radius: 4px; padding: 7px 11px; font-size: 0.62rem; color: var(--gray-300); line-height: 1.6; box-shadow: 0 4px 20px rgba(0,0,0,0.5); min-width: 160px; }
+.tooltip-title { color: var(--gray-200); font-weight: 500; margin-bottom: 2px; }
+.tooltip-detail { color: var(--gray-500); font-weight: 300; }
+.tooltip-action { color: var(--green-300); font-size: 0.58rem; margin-top: 3px; }
+.tooltip-danger { color: var(--red-300); font-size: 0.58rem; margin-top: 3px; }
+.footer { width: 100%; border-top: 1px solid var(--gray-900); padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+.footer-note { font-size: 0.58rem; color: var(--gray-700); }
+.footer-link { font-size: 0.58rem; color: var(--gray-700); text-decoration: none; transition: color 0.2s; }
+.footer-link:hover { color: var(--gray-400); }
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+@media(max-width:640px) {
+  .main{padding:28px 16px 48px;gap:28px} .topbar{padding:0 16px}
+  .how-row{grid-template-columns:1fr} .stats-row{flex-wrap:wrap}
+  .stat-cell{flex:1 1 40%} .grid-wrap{padding:14px 12px}
+  .cell{width:10px;height:10px} .commit-grid,.g-col{gap:2px}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-brand">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    Dead Commits
+  </div>
+  <div class="topbar-links">
+    <button class="topbar-link" id="nav-restart">New Game</button>
+  </div>
+</header>
+<main class="main">
+  <section class="hero">
+    <div class="hero-eyebrow">Contribution Graph · Strategy Game</div>
+    <h1 class="hero-title">Resurrect the<br><em>dead commits.</em></h1>
+    <p class="hero-sub">Your contribution graph has gone cold. Plant seeds of life, watch them spread organically, and resolve merge conflicts before they corrupt the entire repository.</p>
+  </section>
+  <div class="stats-row">
+    <div class="stat-cell"><div class="stat-cell-label">Resurrected</div><div class="stat-cell-value green" id="s-res">0</div></div>
+    <div class="stat-cell"><div class="stat-cell-label">Streak</div><div class="stat-cell-value" id="s-str">0</div></div>
+    <div class="stat-cell"><div class="stat-cell-label">Score</div><div class="stat-cell-value" id="s-score">0</div></div>
+    <div class="stat-cell"><div class="stat-cell-label">Conflicts</div><div class="stat-cell-value red" id="s-conf">0</div></div>
+    <div class="stat-cell" style="min-width:130px">
+      <div class="stat-cell-label">Energy <span id="e-num" style="color:var(--gray-700)">10/10</span></div>
+      <div style="margin-top:8px"><div class="energy-track"><div class="energy-fill" id="e-fill" style="width:100%"></div></div></div>
+    </div>
+  </div>
+  <section class="grid-section">
+    <div class="grid-section-header">
+      <span class="grid-section-title">Contribution Activity — Last 12 months</span>
+      <div class="legend">
+        <span class="legend-label">Less</span>
+        <div class="legend-cell" style="background:var(--gray-900)"></div>
+        <div class="legend-cell" style="background:var(--green-700)"></div>
+        <div class="legend-cell" style="background:var(--green-600)"></div>
+        <div class="legend-cell" style="background:var(--green-400)"></div>
+        <div class="legend-cell" style="background:var(--green-300)"></div>
+        <span class="legend-label">More</span>
+      </div>
+    </div>
+    <div class="grid-wrap">
+      <div class="month-row" id="month-row"></div>
+      <div class="grid-body">
+        <div class="day-col">
+          <div class="day-lbl" style="opacity:0">S</div><div class="day-lbl">Mon</div>
+          <div class="day-lbl" style="opacity:0">T</div><div class="day-lbl">Wed</div>
+          <div class="day-lbl" style="opacity:0">T</div><div class="day-lbl">Fri</div>
+          <div class="day-lbl" style="opacity:0">S</div>
+        </div>
+        <div class="commit-grid" id="grid"></div>
+      </div>
+    </div>
+  </section>
+  <div class="log-row">
+    <div class="log-dot" id="log-dot"></div>
+    <span class="log-text" id="log-text">Click any grey cell to plant a commit seed...</span>
+  </div>
+  <div class="controls-row">
+    <div class="controls-left">
+      <button class="btn btn-primary" id="btn-resolve">Resolve Conflicts <span class="kbd">R</span></button>
+      <button class="btn" id="btn-restart-main">New Game</button>
+    </div>
+    <button class="btn btn-danger" id="btn-purge">Purge Grid <span class="kbd">P</span></button>
+  </div>
+  <div class="how-row">
+    <div class="how-cell"><div class="how-cell-num">01</div><div class="how-cell-title">Plant Seeds</div><div class="how-cell-desc">Click dead grey cells to plant a commit. Costs 2 energy. Energy recharges passively.</div></div>
+    <div class="how-cell"><div class="how-cell-num">02</div><div class="how-cell-title">Grow & Spread</div><div class="how-cell-desc">Level-2+ cells spread to neighbours. Click alive cells to boost their level (costs 1 energy).</div></div>
+    <div class="how-cell"><div class="how-cell-num">03</div><div class="how-cell-title">Resolve Conflicts</div><div class="how-cell-desc">Red cells are merge conflicts. Click or press R. Let them cascade and you lose.</div></div>
+  </div>
+</main>
+<footer class="footer">
+  <span class="footer-note">Win: fill 60% of the graph · Lose: 30% corrupted</span>
+  <a class="footer-link" href="#" target="_blank">View source on GitHub →</a>
+</footer>
+<div class="overlay" id="overlay">
+  <div class="overlay-panel">
+    <div class="overlay-status" id="ov-status">Game Over</div>
+    <div class="overlay-title" id="ov-title">Repository Corrupted</div>
+    <div class="overlay-divider"></div>
+    <div class="overlay-num" id="ov-num">0</div>
+    <div class="overlay-num-label" id="ov-label">commits resurrected</div>
+    <div class="overlay-body" id="ov-body"></div>
+    <div class="overlay-divider"></div>
+    <button class="btn btn-primary" id="btn-play-again" style="width:100%;display:flex;justify-content:center">Play Again</button>
+  </div>
+</div>
+<div class="tooltip" id="tooltip">
+  <div class="tooltip-title" id="tip-title"></div>
+  <div class="tooltip-detail" id="tip-detail"></div>
+  <div id="tip-action"></div>
+</div>
+<script>
+const COLS=53,ROWS=7,TOTAL=COLS*ROWS,MAX_EN=10,SEED_COST=2,BOOST_COST=1;
+const SPREAD_MS=2400,CONFLICT_MS=12000,EN_TICK=400,EN_RATE=0.22;
+const WIN_PCT=0.60,LOSE_PCT=0.30;
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MSG_G=['Commit resurrected successfully.','A dead cell breathes again.','Push accepted. Repository healing.','Life detected in the codebase.','Green light. Another commit alive.','History restored, one cell at a time.','Diff applied. Cell is live.','Commit authored. Spirit intact.','Another entry in the graph.','Status: alive and propagating.'];
+const MSG_W=['Merge conflict detected in working tree.','Corrupted commit spreading through refs.','Rebase failed. Conflict zone expanding.','Unstaged chaos detected.','Conflict cascade imminent.'];
+const MSG_R=['All conflicts resolved. Clean working tree.','Repository stabilized.','No active conflicts. Codebase is healthy.','Merge completed without errors.'];
+let cells=[],en=MAX_EN,sc=0,st=0,res=0,cc=0,go=false,ces=[];
+let sT,cT,eT;
+const idx=(c,r)=>c*ROWS+r;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+function init(){cells=[];for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++)cells.push({c,r,lv:0,cf:false});en=MAX_EN;sc=0;st=0;res=0;cc=0;go=false}
+function buildDOM(){
+  const g=document.getElementById('grid');g.innerHTML='';ces=[];
+  for(let c=0;c<COLS;c++){const col=document.createElement('div');col.className='g-col';const ce=[];
+    for(let r=0;r<ROWS;r++){const el=document.createElement('div');el.className='cell lv0';
+      el.onclick=()=>onClick(c,r);el.onmouseenter=e=>showTip(e,c,r);el.onmouseleave=hideTip;
+      col.appendChild(el);ce.push(el)}g.appendChild(col);ces.push(ce)}
+  const mr=document.getElementById('month-row');mr.innerHTML='';const td=new Date();let lm=-1;
+  for(let c=0;c<COLS;c++){const d=new Date(td);d.setDate(d.getDate()-(COLS-c)*7);
+    const l=document.createElement('div');l.className='month-label';
+    if(d.getMonth()!==lm){l.textContent=MONTHS[d.getMonth()];lm=d.getMonth()}mr.appendChild(l)}}
+function rc(c,r,an){const cell=cells[idx(c,r)];const el=ces[c][r];
+  el.className='cell '+(cell.cf?'conflict':'lv'+cell.lv);
+  if(an){el.classList.add(an);el.addEventListener('animationend',()=>el.classList.remove(an),{once:true})}}
+function upUI(){document.getElementById('s-res').textContent=res;document.getElementById('s-str').textContent=st;
+  document.getElementById('s-score').textContent=sc;document.getElementById('s-conf').textContent=cc;
+  const p=clamp((en/MAX_EN)*100,0,100);document.getElementById('e-fill').style.width=p+'%';
+  document.getElementById('e-num').textContent=Math.floor(en)+'/'+MAX_EN}
+function flash(id){const el=document.getElementById(id);el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),500)}
+function log(m,t){const d=document.getElementById('log-dot');const tx=document.getElementById('log-text');tx.textContent=m;tx.className='log-text'+(t?' '+t:'');d.className='log-dot'+(t==='ok'?' ok':t==='bad'?' bad':'')}
+function onClick(c,r){if(go)return;const cell=cells[idx(c,r)];
+  if(cell.cf){resOne(c,r);return}
+  if(cell.lv>0){if(cell.lv<4){if(en<BOOST_COST){log('Insufficient energy to boost.','bad');return}
+    en-=BOOST_COST;cell.lv++;sc+=8*cell.lv;rc(c,r,'anim-plant');pts(c,r,3);log(pick(MSG_G),'ok')}upUI();return}
+  if(en<SEED_COST){log('Insufficient energy. Waiting for recharge...','bad');return}
+  en-=SEED_COST;cell.lv=1;res++;st++;sc+=10*st;rc(c,r,'anim-plant');pts(c,r,5);log(pick(MSG_G),'ok');upUI();flash('s-res');flash('s-score')}
+function resOne(c,r){const cell=cells[idx(c,r)];cell.cf=false;cell.lv=2;cc=Math.max(0,cc-1);sc+=30;rc(c,r,'anim-resolve');log(pick(MSG_R),'ok');upUI()}
+function resAll(){if(go)return;let n=0;for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){const cell=cells[idx(c,r)];if(cell.cf){cell.cf=false;cell.lv=1;rc(c,r,'anim-resolve');n++}}cc=0;if(n>0){sc+=n*30;log(pick(MSG_R),'ok')}else log('No conflicts in working tree. Repository clean.','ok');upUI()}
+function purge(){if(go)return;for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){cells[idx(c,r)].lv=0;cells[idx(c,r)].cf=false;rc(c,r,null)}st=0;cc=0;log('Repository reset. All commits purged.',null);upUI()}
+function spread(){if(go)return;const ts=[];
+  for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){const cell=cells[idx(c,r)];
+    if(cell.lv>=2&&!cell.cf){for(const[nc,nr]of nb(c,r)){const n=cells[idx(nc,nr)];if(!n.cf&&n.lv===0&&Math.random()<0.09*(cell.lv-1))ts.push([nc,nr])}
+      if(cell.lv<4&&Math.random()<0.028){cell.lv=Math.max(0,cell.lv-1);if(cell.lv===0)st=Math.max(0,st-1);rc(c,r,null)}}}
+  const seen=new Set();for(const[nc,nr]of ts){const k=nc+','+nr;if(!seen.has(k)){seen.add(k);cells[idx(nc,nr)].lv=1;res++;sc+=2;rc(nc,nr,'anim-spread');if(Math.random()<0.4)pts(nc,nr,2)}}
+  for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){const cell=cells[idx(c,r)];if(cell.cf&&Math.random()<0.1)for(const[nc,nr]of nb(c,r)){const n=cells[idx(nc,nr)];if(!n.cf&&Math.random()<0.15){n.cf=true;n.lv=0;cc++;rc(nc,nr,null)}}}
+  upUI();cwl()}
+function cfSpawn(){if(go)return;const alive=[];for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){const cell=cells[idx(c,r)];if(cell.lv>0&&!cell.cf)alive.push([c,r])}
+  if(!alive.length)return;const[c,r]=pick(alive);cells[idx(c,r)].cf=true;cells[idx(c,r)].lv=0;cc++;rc(c,r,null);log(pick(MSG_W),'bad');upUI();cwl()}
+function cwl(){const alive=cells.filter(x=>x.lv>0&&!x.cf).length;if(alive>=Math.floor(TOTAL*WIN_PCT)){endG(true);return}const conf=cells.filter(x=>x.cf).length;if(conf>=Math.floor(TOTAL*LOSE_PCT))endG(false)}
+function endG(won){go=true;clearInterval(sT);clearInterval(cT);clearInterval(eT);
+  const ov=document.getElementById('overlay');ov.classList.add('show');
+  document.getElementById('ov-status').textContent=won?'Victory':'Corrupted';
+  document.getElementById('ov-status').className='overlay-status '+(won?'won':'lost');
+  document.getElementById('ov-title').textContent=won?'Codebase restored.':'Repository lost.';
+  const n=document.getElementById('ov-num');n.textContent=won?res:cc;n.className='overlay-num '+(won?'won-n':'lost-n');
+  document.getElementById('ov-label').textContent=won?'commits resurrected':'merge conflicts consumed the graph';
+  document.getElementById('ov-body').textContent=won?'The contribution graph is alive. Your streak is intact. The repository breathes again.':'The merge conflicts cascaded beyond recovery. All commit history, lost to the void.'}
+function nb(c,r){const ns=[];if(c>0)ns.push([c-1,r]);if(c<COLS-1)ns.push([c+1,r]);if(r>0)ns.push([c,r-1]);if(r<ROWS-1)ns.push([c,r+1]);return ns}
+function pts(col,row,count){const colEl=document.getElementById('grid').children[col];if(!colEl)return;const cEl=colEl.children[row];if(!cEl)return;
+  const rect=cEl.getBoundingClientRect();
+  for(let i=0;i<count;i++){const p=document.createElement('div');p.className='particle';const sz=2+Math.random()*3;const ang=Math.random()*Math.PI*2;const dist=14+Math.random()*24;
+    p.style.cssText=`width:${sz}px;height:${sz}px;background:var(--green-${Math.random()>.5?300:400});left:${rect.left+rect.width/2}px;top:${rect.top+rect.height/2}px;--dx:${Math.cos(ang)*dist}px;--dy:${Math.sin(ang)*dist-10}px;animation-delay:${Math.random()*.2}s;animation-duration:${1.2+Math.random()*.5}s`;
+    document.body.appendChild(p);setTimeout(()=>p.remove(),2000)}}
+function showTip(e,c,r){const cell=cells[idx(c,r)];const tt=document.getElementById('tooltip');const lvN=['No activity','Level 1 — Dim','Level 2 — Active','Level 3 — Thriving','Level 4 — Radiant'];
+  document.getElementById('tip-title').textContent=cell.cf?'Merge Conflict':cell.lv===0?'Dead Cell':lvN[cell.lv];
+  document.getElementById('tip-detail').textContent=cell.cf?'Corrupted commit. Spreading to neighbours.':cell.lv===0?'No commit activity recorded.':cell.lv<4?'Spreading to neighbours at this level.':'Maximum vitality. Fully radiant.';
+  document.getElementById('tip-action').innerHTML=cell.cf?'<span class="tooltip-danger">Click to resolve (+30 pts)</span>':cell.lv===0?`<span class="tooltip-action">Click to resurrect (cost: ${SEED_COST} energy)</span>`:cell.lv<4?`<span class="tooltip-action">Click to boost to level ${cell.lv+1} (cost: ${BOOST_COST} energy)</span>`:'<span style="color:var(--gray-600);font-size:.58rem">Cannot boost further</span>';
+  tt.style.display='block';tt.style.left=(e.clientX+14)+'px';tt.style.top=(e.clientY-8)+'px'}
+function hideTip(){document.getElementById('tooltip').style.display='none'}
+function start(){clearInterval(sT);clearInterval(cT);clearInterval(eT);document.getElementById('overlay').classList.remove('show');
+  init();buildDOM();upUI();log('Click any grey cell to plant a commit seed...',null);
+  sT=setInterval(spread,SPREAD_MS);cT=setInterval(cfSpawn,CONFLICT_MS);eT=setInterval(()=>{if(!go){en=clamp(en+EN_RATE,0,MAX_EN);upUI()}},EN_TICK)}
+document.getElementById('btn-resolve').onclick=resAll;
+document.getElementById('btn-purge').onclick=purge;
+document.getElementById('btn-restart-main').onclick=start;
+document.getElementById('nav-restart').onclick=start;
+document.getElementById('btn-play-again').onclick=start;
+document.onkeydown=e=>{if(e.target.tagName==='INPUT')return;if(e.key==='r'||e.key==='R')resAll();if(e.key==='p'||e.key==='P')purge();if(e.key==='n'||e.key==='N')start()};
+start();
+</script>
+</body>
+</html>

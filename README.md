@@ -50,14 +50,4 @@ Open the deployed page and play directly in your browser.
 Experimental and actively tweakable.  
 The current version focuses on game feel, visual clarity, and core loop balancing.
 
-## Roadmap Ideas
 
-- Difficulty presets (casual / normal / hard)
-- Persistent high scores
-- Mobile-first control tuning
-- Optional sound design and accessibility settings
-- Additional mechanics (power-ups, special events, daily challenge mode)
-
-## License
-
-No license is currently defined. Add a `LICENSE` file if you want to make usage terms explicit.
